@@ -1,0 +1,9 @@
+cmake_minimum_required(VERSION 3.10)
+project(mnist)
+
+find_package(Eigen3 REQUIRED)
+
+add_executable(mnist main.cpp)
+target_link_libraries(mnist Eigen3::Eigen3)
+target_include_directories(mnist PRIVATE include/)
+rapidcsv.h
