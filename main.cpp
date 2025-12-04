@@ -24,24 +24,30 @@ int main(){
         rows.push_back(df.GetRow<double>(i));
     }
 
-    for(auto& innerVec : rows){
-        if(!innerVec.empty()){
-            innerVec.erase(innerVec.begin());
-        }
+    Eigen::MatrixXd w1(10, 784);
+    Eigen::VectorXd b1(10);
+    Eigen::MatrixXd w2(10, 10);
+    Eigen::VectorXd b2(10);
+    Eigen::MatrixXd X(784, 42000);
+
+    for(int i = 0; i < rows.size(); i++){
+         for(int j = 0; j < 784; j++){
+             X(j, i) = (rows[i][j + 1] / 255.0); 
+         }
     }
 
-//   Eigen::MatrixXd w1(10, 784);
-//   Eigen::MatrixXd b1(10, 1);
-//   Eigen::MatrixXd w2(10, 10);
-    //Eigen::MatrixXd b2(10, 1);
-    
-   // w1.setRandom();
-   // w2.setRandom();
-   // b1.setRandom();
-   // b2.setRandom();
+    std::cout << "Rows[0][4]" << rows[0][4] << "X[0][4]" << X(0, 4) << std::endl;
 
-    //Eigen::MatrixXd z1 = (w1.array() * x.array()).matrix();
-    std::cout << rows[0][0] << std::endl << y[0];
+    w1.setRandom();
+    w2.setRandom();
+    b1.setRandom();
+    b2.setRandom();
+
+    Eigen::MatrixXd z1 = w1 * X;
+    z1.colwise() += b1;
+    //std::cout << rows[0][0] << std::endl << y[0];
+    
+    std::cout << z1(0, 3) << std::endl;
 
     return 0;
 
