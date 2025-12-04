@@ -24,24 +24,27 @@ int main(){
         rows.push_back(df.GetRow<double>(i));
     }
 
-    std::cout << rows[0][0] << std::endl;
+    for(auto& innerVec : rows){
+        if(!innerVec.empty()){
+            innerVec.erase(innerVec.begin());
+        }
+    }
 
-//    Eigen::MatrixXd w1(10, 784);
-//    Eigen::MatrixXd b1(10, 1);
-//    Eigen::MatrixXd w2(10, 10);
-//    Eigen::MatrixXd b2(10, 1);
+//   Eigen::MatrixXd w1(10, 784);
+//   Eigen::MatrixXd b1(10, 1);
+//   Eigen::MatrixXd w2(10, 10);
+    //Eigen::MatrixXd b2(10, 1);
     
-//    w1.setRandom();
-//    w2.setRandom();
-//    b1.setRandom();
-//    b2.setRandom();
+   // w1.setRandom();
+   // w2.setRandom();
+   // b1.setRandom();
+   // b2.setRandom();
 
-//    Eigen::MatrixXd z1 = (w1.array() * x.array()).matrix();
-
+    //Eigen::MatrixXd z1 = (w1.array() * x.array()).matrix();
+    std::cout << rows[0][0] << std::endl << y[0];
 
     return 0;
 
 }
-
 
 
