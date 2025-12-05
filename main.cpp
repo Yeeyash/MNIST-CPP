@@ -15,14 +15,19 @@ Eigen::MatrixXd ReLu(Eigen::MatrixXd z){
     return a;
 }
 
-//Eigen::MatrixXd softmax(Eigen::MatrixXd z2){
-//    Eigen::RowVectorXd maxperCol = z2.colwise().maxCoeff();
-//    Eigen::MatrixXd a = z2.colwise() - maxperCol;
-//    Eigen::MatrixXd exp_a = a.array().exp();
-//    Eigen::RowVectorXd col_sum = exp_a.colwise().sum();
-//    Eigen::MatrixXd a2 = (exp_a.array().rowwise() / col_sum.array());    
-//    return a2;
-//}
+Eigen::MatrixXd softmax(Eigen::MatrixXd z2){
+    Eigen::VectorXd z2d = z2.reshaped();
+    z2d.transpose();
+    double m = z2d.maxCoeff();
+    Eigen::VectorXd shifted = (z2d.array() - m).exp();
+    double denominator = shifted.sum();
+    //normalize.
+    Eigen::VectorXd res = shifted /denominator;
+
+    Eigen::MatrixXd z2r = Eigen::Map<Eigen::MatrixXd>(res.data(), 784, 42000);
+
+    return z2r;
+}
 
 Eigen::MatrixXd forward_prop(Eigen::MatrixXd w1, Eigen::VectorXd b1, Eigen::MatrixXd w2, Eigen::VectorXd b2, Eigen::MatrixXd X){
     
@@ -34,7 +39,7 @@ Eigen::MatrixXd forward_prop(Eigen::MatrixXd w1, Eigen::VectorXd b1, Eigen::Matr
     Eigen::MatrixXd z2 = w2 * a1;
     z2.colwise() += b2;
 
-    //Eigen::MatrixXd a2 = softmax(z2);
+    Eigen::MatrixXd a2 = softmax(z2);
 
     return z1;
 }
