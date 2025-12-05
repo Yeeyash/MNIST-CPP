@@ -15,13 +15,14 @@ Eigen::MatrixXd ReLu(Eigen::MatrixXd z){
     return a;
 }
 
-Eigen::MatrixXd softmax(Eigen::MatrixXd z2){
-    Eigen::MatrixXd a = z2.array() - z2.colwise().maxCoeff();
-    Eigen::MatrixXd exp_a = a.array().exp();
-    Eigen::MatrixXd a2 = (exp_a.colwise() / exp_a.colwise().sum()).matrix();
-    
-    return a2;
-}
+//Eigen::MatrixXd softmax(Eigen::MatrixXd z2){
+//    Eigen::RowVectorXd maxperCol = z2.colwise().maxCoeff();
+//    Eigen::MatrixXd a = z2.colwise() - maxperCol;
+//    Eigen::MatrixXd exp_a = a.array().exp();
+//    Eigen::RowVectorXd col_sum = exp_a.colwise().sum();
+//    Eigen::MatrixXd a2 = (exp_a.array().rowwise() / col_sum.array());    
+//    return a2;
+//}
 
 Eigen::MatrixXd forward_prop(Eigen::MatrixXd w1, Eigen::VectorXd b1, Eigen::MatrixXd w2, Eigen::VectorXd b2, Eigen::MatrixXd X){
     
@@ -33,12 +34,43 @@ Eigen::MatrixXd forward_prop(Eigen::MatrixXd w1, Eigen::VectorXd b1, Eigen::Matr
     Eigen::MatrixXd z2 = w2 * a1;
     z2.colwise() += b2;
 
+    //Eigen::MatrixXd a2 = softmax(z2);
 
-
-    return z1, a1, z2, a2;
+    return z1;
 }
 
+Eigen::MatrixXd one_hot(std::vector<float>Y){
+    int m = static_cast<int>(Y.size());
+    
+    Eigen::MatrixXd y(10, m);
+    y.setZero();
 
+    for(int i = 0; i < m; i++){
+        int c = static_cast<int>(Y[i]);
+        y(c, i) = 1.0;
+    }
+    
+    return y;
+}
+
+//Eigen::MatrixXd backpropagation_W(Eigen::MatrixXd z1, Eigen::MatrixXd a1, Eigen::MatrixXd z2, Eigen::MatrixXd a2, Eigen::MatrixXd w1, Eigen::MatrixXd w2, Eigen::MatrixXd X, std::vector<float> Y){
+//    Eigen::MatrixXd onehotY = one_hot(Y);
+//    int m = Y.size();
+//
+//    Eigen::MatrixXd dz2 = a2 - onehotY;
+//    Eigen::MatrixXd dw2 = ((dz2 * a1.transpose()) / m); 
+//
+//    //Eigen::MatrixXd dz1 = 
+//    //
+//    
+//    return 0;
+//}
+
+
+
+
+
+// remember to shuffle data before assigning.
 int main(){
     
     rapidcsv::Document df("data/train.csv");
@@ -51,10 +83,10 @@ int main(){
         rows.push_back(df.GetRow<double>(i));
     }
 
-    Eigen::MatrixXd w1(10, 784);
-    Eigen::VectorXd b1(10);
-    Eigen::MatrixXd w2(10, 10);
-    Eigen::VectorXd b2(10);
+    //Eigen::MatrixXd w1(10, 784);
+    //Eigen::VectorXd b1(10);
+    //Eigen::MatrixXd w2(10, 10);
+    //Eigen::VectorXd b2(10);
     Eigen::MatrixXd X(784, 42000);
 
     for(int i = 0; i < rows.size(); i++){
@@ -62,20 +94,17 @@ int main(){
              X(j, i) = (rows[i][j + 1] / 255.0); 
          }
     }
-
-    std::cout << "Rows[0][4]" << rows[0][4] << "X[0][4]" << X(0, 4) << std::endl;
-
-    w1.setRandom();
-    w2.setRandom();
-    b1.setRandom();
-    b2.setRandom();
-
-    Eigen::MatrixXd z1 = w1 * X;
-    z1.colwise() += b1;
-    //std::cout << rows[0][0] << std::endl << y[0];
     
-    std::cout << z1(0, 3) << std::endl;
+    std::cout << rows.size() << rows[0].size() << X.rows() << X.cols();
 
+    //w1.setRandom();
+    //w2.setRandom();
+    //b1.setRandom();
+    //b2.setRandom();
+
+    //Eigen::MatrixXd z1 = w1 * X;
+    //z1.colwise() += b1;
+    
     return 0;
 
 }
