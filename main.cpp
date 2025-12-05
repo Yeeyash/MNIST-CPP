@@ -5,6 +5,7 @@
 #include <Eigen/Dense>
 #include <iterator>
 #include <system_error>
+#include <tuple>
 #include <vector>
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -16,20 +17,19 @@ Eigen::MatrixXd ReLu(Eigen::MatrixXd z){
 }
 
 Eigen::MatrixXd softmax(Eigen::MatrixXd z2){
-    Eigen::VectorXd z2d = z2.reshaped();
-    z2d.transpose();
-    double m = z2d.maxCoeff();
-    Eigen::VectorXd shifted = (z2d.array() - m).exp();
-    double denominator = shifted.sum();
-    //normalize.
-    Eigen::VectorXd res = shifted /denominator;
 
-    Eigen::MatrixXd z2r = Eigen::Map<Eigen::MatrixXd>(res.data(), 784, 42000);
+    Eigen::RowVectorXd colmax = z2.colwise().maxCoeff();
 
-    return z2r;
+    Eigen::MatrixXd shifted = z2.rowwise() - colmax;
+
+    Eigen::MatrixXd exps = shifted.array().exp();
+    Eigen::RowVectorXd denom = exps.colwise().sum();
+    Eigen::MatrixXd pro = exps.array().rowwise() / denom.array();
+
+    return pro;
 }
 
-Eigen::MatrixXd forward_prop(Eigen::MatrixXd w1, Eigen::VectorXd b1, Eigen::MatrixXd w2, Eigen::VectorXd b2, Eigen::MatrixXd X){
+std::tuple<Eigen::MatrixXd, Eigen::MatrixXd, Eigen::MatrixXd, Eigen::MatrixXd> forward_prop(Eigen::MatrixXd w1, Eigen::VectorXd b1, Eigen::MatrixXd w2, Eigen::VectorXd b2, Eigen::MatrixXd X){
     
     Eigen::MatrixXd z1 = w1 * X;
     z1.colwise() += b1;
@@ -41,7 +41,7 @@ Eigen::MatrixXd forward_prop(Eigen::MatrixXd w1, Eigen::VectorXd b1, Eigen::Matr
 
     Eigen::MatrixXd a2 = softmax(z2);
 
-    return z1;
+    return {z1, a1, z2, a2};
 }
 
 Eigen::MatrixXd one_hot(std::vector<float>Y){
@@ -71,10 +71,6 @@ Eigen::MatrixXd one_hot(std::vector<float>Y){
 //    return 0;
 //}
 
-
-
-
-
 // remember to shuffle data before assigning.
 int main(){
     
@@ -88,10 +84,10 @@ int main(){
         rows.push_back(df.GetRow<double>(i));
     }
 
-    //Eigen::MatrixXd w1(10, 784);
-    //Eigen::VectorXd b1(10);
-    //Eigen::MatrixXd w2(10, 10);
-    //Eigen::VectorXd b2(10);
+    Eigen::MatrixXd w1(10, 784);
+    Eigen::VectorXd b1(10);
+    Eigen::MatrixXd w2(10, 10);
+    Eigen::VectorXd b2(10);
     Eigen::MatrixXd X(784, 42000);
 
     for(int i = 0; i < rows.size(); i++){
@@ -100,15 +96,16 @@ int main(){
          }
     }
     
-    std::cout << rows.size() << rows[0].size() << X.rows() << X.cols();
+    w1.setRandom();
+    w2.setRandom();
+    b1.setRandom();
+    b2.setRandom();
+    
 
-    //w1.setRandom();
-    //w2.setRandom();
-    //b1.setRandom();
-    //b2.setRandom();
+    Eigen::MatrixXd z1, a1, z2, a2;
+    std::tie(z1, a1, z2, a2) = forward_prop(w1, b1, w2, b2, X);
 
-    //Eigen::MatrixXd z1 = w1 * X;
-    //z1.colwise() += b1;
+    std::cout << z1(2,1)<< std::endl << a1(2, 1) << std::endl << z2(2,1) << std::endl << a2(2, 1);
     
     return 0;
 
