@@ -1,16 +1,43 @@
 #include "include/rapidcsv.h"
+#include <cerrno>
 #include <cmath>
 #include <iostream>
 #include <Eigen/Dense>
 #include <iterator>
+#include <system_error>
 #include <vector>
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-int ReLu(int x){
-    if(x > 0) return x;
-    return 0;
+Eigen::MatrixXd ReLu(Eigen::MatrixXd z){
+    Eigen::MatrixXd a = z.array().max(0.0);
+    
+    return a;
 }
+
+Eigen::MatrixXd softmax(Eigen::MatrixXd z2){
+    Eigen::MatrixXd a = z2.array() - z2.colwise().maxCoeff();
+    Eigen::MatrixXd exp_a = a.array().exp();
+    Eigen::MatrixXd a2 = (exp_a.colwise() / exp_a.colwise().sum()).matrix();
+    
+    return a2;
+}
+
+Eigen::MatrixXd forward_prop(Eigen::MatrixXd w1, Eigen::VectorXd b1, Eigen::MatrixXd w2, Eigen::VectorXd b2, Eigen::MatrixXd X){
+    
+    Eigen::MatrixXd z1 = w1 * X;
+    z1.colwise() += b1;
+
+    Eigen::MatrixXd a1 = ReLu(z1);
+
+    Eigen::MatrixXd z2 = w2 * a1;
+    z2.colwise() += b2;
+
+
+
+    return z1, a1, z2, a2;
+}
+
 
 int main(){
     
