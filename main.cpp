@@ -58,18 +58,25 @@ Eigen::MatrixXd one_hot(std::vector<float>Y){
     return y;
 }
 
-//Eigen::MatrixXd backpropagation_W(Eigen::MatrixXd z1, Eigen::MatrixXd a1, Eigen::MatrixXd z2, Eigen::MatrixXd a2, Eigen::MatrixXd w1, Eigen::MatrixXd w2, Eigen::MatrixXd X, std::vector<float> Y){
-//    Eigen::MatrixXd onehotY = one_hot(Y);
-//    int m = Y.size();
-//
-//    Eigen::MatrixXd dz2 = a2 - onehotY;
-//    Eigen::MatrixXd dw2 = ((dz2 * a1.transpose()) / m); 
-//
-//    //Eigen::MatrixXd dz1 = 
-//    //
-//    
-//    return 0;
-//}
+Eigen::MatrixXd reluDiv(Eigen::MatrixXd z1){
+    return (z1.array() > 0).cast<double>();
+}
+
+std::tuple<Eigen::MatrixXd, Eigen::VectorXd, Eigen::MatrixXd, Eigen::VectorXd> backpropagation_W(Eigen::MatrixXd z1, Eigen::MatrixXd a1, Eigen::MatrixXd z2, Eigen::MatrixXd a2, Eigen::MatrixXd w1, Eigen::MatrixXd w2, Eigen::MatrixXd X, std::vector<float> Y){
+    Eigen::MatrixXd onehotY = one_hot(Y);
+    int m = Y.size();
+
+    Eigen::MatrixXd dz2 = a2 - onehotY;
+    Eigen::MatrixXd dw2 = ((dz2 * a1.transpose()) / m); 
+    Eigen::VectorXd db2 = (dz2.colwise().sum()) / m;
+
+    //if results are incorrect check the * reluDiv portion as * is used for dot operation as well.
+    Eigen::MatrixXd dz1 = (w2 * dz2).array() * reluDiv(z1).array();
+    Eigen::MatrixXd dw1 = (dz1 * X.transpose()) / m;
+    Eigen::VectorXd db1 = (dz1.colwise().sum()) / m;
+
+    return {dw1, db1, dw2, db2};
+}
 
 // remember to shuffle data before assigning.
 int main(){
