@@ -1,12 +1,18 @@
 #include "include/rapidcsv.h"
+#include <cassert>
 #include <cerrno>
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <Eigen/Dense>
 #include <iterator>
+#include <sys/stat.h>
 #include <system_error>
 #include <tuple>
 #include <vector>
+#include <algorithm>
+#include <random>
+#include <numeric>
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -44,7 +50,7 @@ std::tuple<Eigen::MatrixXd, Eigen::MatrixXd, Eigen::MatrixXd, Eigen::MatrixXd> f
     return {z1, a1, z2, a2};
 }
 
-Eigen::MatrixXd one_hot(std::vector<float>Y){
+Eigen::MatrixXd one_hot(Eigen::VectorXi Y){
     int m = static_cast<int>(Y.size());
     
     Eigen::MatrixXd y(10, m);
@@ -62,7 +68,7 @@ Eigen::MatrixXd reluDiv(Eigen::MatrixXd z1){
     return (z1.array() > 0).cast<double>();
 }
 
-std::tuple<Eigen::MatrixXd, Eigen::VectorXd, Eigen::MatrixXd, Eigen::VectorXd> backpropagation_W(Eigen::MatrixXd z1, Eigen::MatrixXd a1, Eigen::MatrixXd z2, Eigen::MatrixXd a2, Eigen::MatrixXd w1, Eigen::MatrixXd w2, Eigen::MatrixXd X, std::vector<float> Y){
+std::tuple<Eigen::MatrixXd, Eigen::VectorXd, Eigen::MatrixXd, Eigen::VectorXd> backpropagation(Eigen::MatrixXd z1, Eigen::MatrixXd a1, Eigen::MatrixXd z2, Eigen::MatrixXd a2, Eigen::MatrixXd w1, Eigen::MatrixXd w2, Eigen::MatrixXd X, Eigen::VectorXi Y){
     Eigen::MatrixXd onehotY = one_hot(Y);
     int m = Y.size();
 
@@ -71,7 +77,7 @@ std::tuple<Eigen::MatrixXd, Eigen::VectorXd, Eigen::MatrixXd, Eigen::VectorXd> b
     Eigen::VectorXd db2 = (dz2.colwise().sum()) / m;
 
     //if results are incorrect check the * reluDiv portion as * is used for dot operation as well.
-    Eigen::MatrixXd dz1 = (w2 * dz2).array() * reluDiv(z1).array();
+    Eigen::MatrixXd dz1 = (w2.transpose() * dz2).array() * reluDiv(z1).array();
     Eigen::MatrixXd dw1 = (dz1 * X.transpose()) / m;
     Eigen::VectorXd db1 = (dz1.colwise().sum()) / m;
 
@@ -86,12 +92,54 @@ std::tuple<Eigen::MatrixXd, Eigen::VectorXd, Eigen::MatrixXd, Eigen::VectorXd> u
     return {w1, b1, w2, b2};
 }
 
-// remember to shuffle data before assigning.
+Eigen::VectorXi predictions(Eigen::MatrixXd a2){
+    int m = a2.cols();
+    Eigen::VectorXi preds(m);
+   
+    for(int i = 0; i < m; i++){
+        Eigen::Index maxIndex;
+        a2.col(i).maxCoeff(&maxIndex);
+        preds(i) = static_cast<int>(maxIndex); 
+    }
+
+    return preds;
+}
+
+double accuracy(Eigen::VectorXi preds, Eigen::VectorXi Y){
+    assert(preds.size() == Y.size());
+    double correct = (preds.array() == Y.array()).cast<double>().sum();
+
+    return correct / static_cast<double>(Y.size());
+}
+
+std::tuple<Eigen::MatrixXd , Eigen::VectorXd, Eigen::MatrixXd, Eigen::VectorXd> gradient_descent(Eigen::MatrixXd X, Eigen::VectorXi Y, double alpha, int iterations){
+    
+    Eigen::MatrixXd z1, a1, z2, a2, w1(10, 784), w2(10, 10), dw1, dw2, dz1, dz2;
+    Eigen::VectorXd b1(10), b2(10), db1(10), db2(10);
+    for(int i = 0; i < iterations; i++){
+        
+        std::tie(z1, a1, z2, a2) = forward_prop(w1, b1, w2, b2, X);
+        std::tie(dw1, db1, dw2, db2) = backpropagation(z1, a1, z2, a2, w1, w2, X, Y);
+        std::tie(w1, b1, w2, b2) = update_parameters(w1, b1, w2, b2, dw1, db1, dw2, db2, alpha);
+
+        if(i % 10 == 0){
+            std::cout << "Iteration: " << i;
+            Eigen::VectorXi preds = predictions(a2);
+            std::cout << "Accuracy: " << accuracy(preds, Y);
+        }
+    }
+    
+    return {w1, b1, w2, b2};
+}
+
 int main(){
     
     rapidcsv::Document df("data/train.csv");
-    auto y = df.GetColumn<float>("label");
     int n = df.GetRowCount();
+    Eigen::VectorXi y(n);
+    for(int i = 0; i < n; i++){
+        y(i) = df.GetCell<int>("label", i);
+    }
 
     std::vector<std::vector<double>> rows;
 
@@ -103,24 +151,35 @@ int main(){
     Eigen::VectorXd b1(10);
     Eigen::MatrixXd w2(10, 10);
     Eigen::VectorXd b2(10);
-    Eigen::MatrixXd X(784, 42000);
+    Eigen::MatrixXd X(784, n);
 
-    for(int i = 0; i < rows.size(); i++){
+    for(int i = 0; i < n; i++){
          for(int j = 0; j < 784; j++){
              X(j, i) = (rows[i][j + 1] / 255.0); 
          }
     }
     
+    std::vector<int> idx(n);
+    std::iota(idx.begin(), idx.end(), 0);
+
+    std::mt19937 rng(std::random_device{}());
+    std::shuffle(idx.begin(), idx.end(), rng);
+
+    // map indices to Eigen permutation
+    
+    Eigen::PermutationMatrix<Eigen::Dynamic> perm(n);
+    perm.indices() = Eigen::Map<Eigen::VectorXi>(idx.data(), idx.size());
+
+    // apply same permutation to X and y (perm acts on columns because X is dim x n)
+    X = X * perm.inverse(); 
+    y = perm.inverse() * y;
+
     w1.setRandom();
     w2.setRandom();
     b1.setRandom();
     b2.setRandom();
     
-
-    Eigen::MatrixXd z1, a1, z2, a2;
-    std::tie(z1, a1, z2, a2) = forward_prop(w1, b1, w2, b2, X);
-
-    std::cout << z1(2,1)<< std::endl << a1(2, 1) << std::endl << z2(2,1) << std::endl << a2(2, 1);
+    std::tie(w1, b1, w2, b2) = gradient_descent(X, y, 0.01, 100);
     
     return 0;
 
