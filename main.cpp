@@ -78,6 +78,14 @@ std::tuple<Eigen::MatrixXd, Eigen::VectorXd, Eigen::MatrixXd, Eigen::VectorXd> b
     return {dw1, db1, dw2, db2};
 }
 
+std::tuple<Eigen::MatrixXd, Eigen::VectorXd, Eigen::MatrixXd, Eigen::VectorXd> update_parameters(Eigen::MatrixXd w1, Eigen::VectorXd b1, Eigen::MatrixXd w2, Eigen::VectorXd b2, Eigen::MatrixXd dw1, Eigen::VectorXd db1, Eigen::MatrixXd dw2, Eigen::MatrixXd db2, double alpha){
+    w1 = w1 - (alpha * dw1);
+    b1 = b1 - (alpha * db1);
+    w2 = w2 - (alpha * dw2);
+    b2 = b2 - (alpha * db2);
+    return {w1, b1, w2, b2};
+}
+
 // remember to shuffle data before assigning.
 int main(){
     
