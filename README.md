@@ -24,16 +24,18 @@ b<sub>2</sub>: 10.
 ```
 Additional parameters:
 ```bash
-Z<sub>1</sub>,
-A<sub>1</sub>,
-Z<sub>2</sub>,
-A<sub>2</sub>,
-dZ<sub>1</sub>,
-dW<sub>1</sub>,
-dB<sub>1</sub>,
-dZ<sub>2</sub>,
-dW<sub>2</sub>,
-dB<sub>2</sub>
+**Forward Pass:**
+- $Z_1 = W_1 X + b_1$ (10×m)
+- $A_1 = \text{ReLU}(Z_1)$  
+- $Z_2 = W_2 A_1 + b_2$ (10×m)
+- $A_2 = \text{softmax}(Z_2)$
+
+**Backpropagation:**
+- $dZ_2 = A_2 - Y_\text{onehot}$
+- $dW_2 = \frac{1}{m} dZ_2 A_1^T$
+- $dB_2 = \frac{1}{m} \sum dZ_2$ **(rowwise().sum())**
+- $dZ_1 = (W_2^T dZ_2) \odot \text{ReLU}'(Z_1)$
+
 ```
 
 ### Build Instructions
