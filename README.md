@@ -17,25 +17,16 @@ Input (784) → Hidden (10, ReLU) → Output (10, Softmax)
 - Shapes:
 ```bash
 X (Input dataset): m X 784; (m = 42000, each row : sample class, column : pixel values 0 - 783),
-W<sub>1</sub>: 10 X 784,
-b1<sub>1</sub?: 10,
-W<sub>2</sub>: 10 X 10,
-b<sub>2</sub>: 10.
+W1: 10 X 784,
+b1 : 10,
+W2: 10 X 10,
+b2: 10.
 ```
 Additional parameters:
 ```bash
-**Forward Pass:**
-- $Z_1 = W_1 X + b_1$ (10×m)
-- $A_1 = \text{ReLU}(Z_1)$  
-- $Z_2 = W_2 A_1 + b_2$ (10×m)
-- $A_2 = \text{softmax}(Z_2)$
-
-**Backpropagation:**
-- $dZ_2 = A_2 - Y_\text{onehot}$
-- $dW_2 = \frac{1}{m} dZ_2 A_1^T$
-- $dB_2 = \frac{1}{m} \sum dZ_2$ **(rowwise().sum())**
-- $dZ_1 = (W_2^T dZ_2) \odot \text{ReLU}'(Z_1)$
-
+Z1, A1, Z2,
+A2, dZ1, dW1,
+dB1, dZ2, dW2, dB2
 ```
 
 ### Build Instructions
