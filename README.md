@@ -1,5 +1,5 @@
 # C++ Feedforward Nerual Network (MLP)
-A lightweight, from-scratch implementation of a multilayer perceptron (MLP) n C++ using Eigen for linear algebra and rapidcsv for MNIST dataset loading. Supports forward propagation, backpropagation, ReLU activation, stable softmax, and full-batch gradient descent on handwritten digit recognition. Achieves reasonable accuracy on MNIST with a compact 784-10-10 architecture.
+A lightweight, from-scratch implementation of a multilayer perceptron (MLP) in C++ using Eigen for linear algebra and rapidcsv for MNIST dataset loading. Supports forward propagation, backpropagation, ReLU activation, stable softmax, and full-batch gradient descent on handwritten digit recognition. Achieves reasonable accuracy on MNIST with a compact 784-10-10 architecture.
 
 ### Features:
 - Vectorized matrix operations via Eigen (no nested loops).
